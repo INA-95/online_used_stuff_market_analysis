@@ -46,3 +46,46 @@ import pandas as pd
 
 val_df = pd.DataFrame(dataset['validation'])
 val_df.head()
+
+!pip install konlpy
+
+from typing import List, Any
+from collections import defaultdict
+from konlpy.tag import Mecab
+
+
+def duplicated(df: pd.DataFrame, target_col: str, n: int) -> dict:
+    lst = []
+    for title, sub in df.groupby('title'):
+        if len(sub) >= n:
+            res = set(sub[target_col])
+            for value in res:
+                lst.append(value)
+
+    # {지역명 or 카테고리 : 횟수}
+    tar_freq = defaultdict(int)
+    for value in lst:
+        tar_freq[value] += 1
+
+    pairs = ((val, key) for (key, val) in tar_freq.items())
+    sorted_pairs = sorted(pairs, reverse=True)
+    final_res = {k: v for v, k in sorted_pairs}
+
+    return final_res
+
+from collections import defaultdict
+
+def duplicated_loc(df:pd.DataFrame, N:int) -> dict:
+
+    # 도배글이 많이 올라온 지역 : {'지역' : 횟수}
+    loc_lst = [set(sub['location'].values)
+                    for id, sub in df.groupby(['id', 'title']) if len(sub) >= 3]
+    loc_lst = [val for loc in loc_lst for val in loc]
+    loc_cnt = defaultdict(int)
+
+    for loc in loc_lst:
+        loc_cnt[loc] += 1
+
+    # pairs = ((v, k) for (k, v) in loc_cnt.items())
+    top_N = sorted(loc_cnt.items(), key = lambda x: x[1], reverse = True)[:N]
+    return top_N
