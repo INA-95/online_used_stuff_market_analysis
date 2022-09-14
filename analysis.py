@@ -89,3 +89,17 @@ def duplicated_loc(df:pd.DataFrame, N:int) -> dict:
     # pairs = ((v, k) for (k, v) in loc_cnt.items())
     top_N = sorted(loc_cnt.items(), key = lambda x: x[1], reverse = True)[:N]
     return top_N
+
+
+filter_word = ['가짜', '주류', '술', '담배']
+
+
+def garbage(df: pd.DataFrame, filter_word: list, target: str):
+    # 금기어 필터링
+    for word in filter_word:
+        filter_df = df[df[target].str.contains(word, na=False)]
+
+        # 금기어 - 지역 : 횟수
+        filter_df['location'].value_counts()
+
+        # 금기어 - 타이틀, 콘텐츠 키워드 분석
