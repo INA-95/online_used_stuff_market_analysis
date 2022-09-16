@@ -91,15 +91,41 @@ def duplicated_loc(df:pd.DataFrame, N:int) -> dict:
     return top_N
 
 
+from collections import defaultdict
+from collections import Counter
+
 filter_word = ['가짜', '주류', '술', '담배']
 
 
-def garbage(df: pd.DataFrame, filter_word: list, target: str):
+def garbage(df: pd.DataFrame, filter_word: list, target: str) -> defaultdict:
     # 금기어 필터링
     for word in filter_word:
         filter_df = df[df[target].str.contains(word, na=False)]
 
-        # 금기어 - 지역 : 횟수
-        filter_df['location'].value_counts()
+        # {금기어 : ['지역명', '지역명']}
+        # {금기어 : [(지역명, 횟수)]}
+        key = word
+        val = list(filter_df['location'].values)
+        res_dict = defaultdict(int)
+        res_dict[key] = sorted(list(Counter(val).items()), reverse=True, key=lambda x: x[1])
 
-        # 금기어 - 타이틀, 콘텐츠 키워드 분석
+        # {금기어 : [(지역명, 횟수)]}
+        return res_dict
+
+
+from konlpy.tag import Mecab
+
+
+def garbage_analysis(df: pd.DataFrame, filter_word: list, target: str):
+    for word in filter_word:
+        filter_df = df[df[target].str.contains(word, na=False)]
+
+        tokenizer = Mecab()
+        contents = filter_df[target].tolist()  # list[str]
+        word_pos = get_pos(tokenizer, contents)  # list[list[str]]
+        contents = filter_pos(word_pos, pos='N')
+        contents = filter_len(contents, 2)
+        contents = set_threshold(contents, 0.5)
+        res = bag_of_words(contents)
+
+    print(res)
